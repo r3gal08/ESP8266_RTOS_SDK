@@ -7,7 +7,7 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
-// Test commit
+// Test commit 2
 
 #include <string.h>
 
