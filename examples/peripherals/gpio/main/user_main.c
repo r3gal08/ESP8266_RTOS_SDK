@@ -49,7 +49,7 @@ static const char *TAG = "main";
 #define GPIO_OUTPUT_PIN_SEL  ((1ULL<<GPIO_OUTPUT_IO_power) | (1ULL<<GPIO_OUTPUT_IO_speed) | ((1ULL<<GPIO_OUTPUT_IO_rot) | (1ULL<<GPIO_OUTPUT_IO_windMode)) | (1ULL<<GPIO_OUTPUT_IO_timer))
 
 void gpio_Init() {
-    gpio_conf ig_t io_conf;
+    gpio_config_t io_conf;
     //disable interrupt
     io_conf.intr_type = GPIO_INTR_DISABLE;
     //set as output mode
