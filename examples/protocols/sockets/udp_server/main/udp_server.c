@@ -36,8 +36,6 @@ static void udp_server_task(void *pvParameters)
     int ip_protocol;
 
     while (1) {
-
-#ifdef CONFIG_EXAMPLE_IPV4
         struct sockaddr_in destAddr;
         destAddr.sin_addr.s_addr = htonl(INADDR_ANY);
         destAddr.sin_family = AF_INET;
@@ -45,15 +43,6 @@ static void udp_server_task(void *pvParameters)
         addr_family = AF_INET;
         ip_protocol = IPPROTO_IP;
         inet_ntoa_r(destAddr.sin_addr, addr_str, sizeof(addr_str) - 1);
-#else // IPV6
-        struct sockaddr_in6 destAddr;
-        bzero(&destAddr.sin6_addr.un, sizeof(destAddr.sin6_addr.un));
-        destAddr.sin6_family = AF_INET6;
-        destAddr.sin6_port = htons(PORT);
-        addr_family = AF_INET6;
-        ip_protocol = IPPROTO_IPV6;
-        inet6_ntoa_r(destAddr.sin6_addr, addr_str, sizeof(addr_str) - 1);
-#endif
 
         int sock = socket(addr_family, SOCK_DGRAM, ip_protocol);
         if (sock < 0) {
@@ -69,13 +58,9 @@ static void udp_server_task(void *pvParameters)
         ESP_LOGI(TAG, "Socket binded");
 
         while (1) {
-
             ESP_LOGI(TAG, "Waiting for data");
-#ifdef CONFIG_EXAMPLE_IPV6
-            struct sockaddr_in6 sourceAddr; // Large enough for both IPv4 or IPv6
-#else
             struct sockaddr_in sourceAddr;
-#endif
+
             socklen_t socklen = sizeof(sourceAddr);
             int len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, (struct sockaddr *)&sourceAddr, &socklen);
 
@@ -87,16 +72,8 @@ static void udp_server_task(void *pvParameters)
             // Data received
             else {
                 // Get the sender's ip address as string
-#ifdef CONFIG_EXAMPLE_IPV6
-                if (sourceAddr.sin6_family == PF_INET) {
-                    inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
-                } else if (sourceAddr.sin6_family == PF_INET6) {
-                    inet6_ntoa_r(sourceAddr.sin6_addr, addr_str, sizeof(addr_str) - 1);
-                }
-#else
                 inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
-#endif
-
+                
                 rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string...
                 ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
                 ESP_LOGI(TAG, "%s", rx_buffer);
@@ -115,6 +92,7 @@ static void udp_server_task(void *pvParameters)
             close(sock);
         }
     }
+
     vTaskDelete(NULL);
 }
 
