@@ -24,6 +24,8 @@
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
+#include "driver/gpio.h"
+
 #define PORT CONFIG_EXAMPLE_PORT
 
 #define GPIO_OUTPUT_IO_power    16
@@ -33,6 +35,8 @@
 #define GPIO_OUTPUT_IO_timer    12
 
 #define GPIO_OUTPUT_PIN_SEL  ((1ULL<<GPIO_OUTPUT_IO_power) | (1ULL<<GPIO_OUTPUT_IO_speed) | ((1ULL<<GPIO_OUTPUT_IO_rot) | (1ULL<<GPIO_OUTPUT_IO_windMode)) | (1ULL<<GPIO_OUTPUT_IO_timer))
+
+static const char *TAG = "example";
 
 void gpio_Init() {
     gpio_config_t io_conf;
@@ -57,8 +61,6 @@ void gpio_Init() {
 
     ESP_LOGI(TAG, "GPIO Initilized");
 }
-
-static const char *TAG = "example";
 
 static void udp_server_task(void *pvParameters){
     char rx_buffer[128];
@@ -109,34 +111,34 @@ static void udp_server_task(void *pvParameters){
                 ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
                 ESP_LOGI(TAG, "%s", rx_buffer);
 
-                // Determine what button was pressed
-                if(strcmp(rx_buff, "power") == 0) {
-                    gpio_set_level(#define GPIO_OUTPUT_IO_power, 0);
+                // Determine what button was pressed. TODO: may need to investigate output logic
+                if(strcmp(rx_buffer, "power") == 0) {
+                    gpio_set_level(GPIO_OUTPUT_IO_power, 0);
                     vTaskDelay(1000 / portTICK_RATE_MS);
                     gpio_set_level(GPIO_OUTPUT_IO_power, 1);
-                    ESP_LOGI(TAG, "power button pressed")
-                } else if(strcmp(rx_buff, "speed" == 0)) {
+                    ESP_LOGI(TAG, "power button pressed");
+                } else if(strcmp(rx_buffer, "speed") == 0) {
                     gpio_set_level(GPIO_OUTPUT_IO_speed, 0);
                     vTaskDelay(1000 / portTICK_RATE_MS);
                     gpio_set_level(GPIO_OUTPUT_IO_speed, 1);
-                    ESP_LOGI(TAG, "speed button pressed")
-                } else if(strcmp(rx_buff, "rot" == 0)) {
-                    gpio_set_level(#define GPIO_OUTPUT_IO_rot, 0);
+                    ESP_LOGI(TAG, "speed button pressed");
+                } else if(strcmp(rx_buffer, "rot") == 0) {
+                    gpio_set_level(GPIO_OUTPUT_IO_rot, 0);
                     vTaskDelay(1000 / portTICK_RATE_MS);
-                    gpio_set_level(#define GPIO_OUTPUT_IO_rot, 1);
-                    ESP_LOGI(TAG, "rot button pressed")
-                } else if(strcmp(rx_buff, "wind" == 0)) {
+                    gpio_set_level(GPIO_OUTPUT_IO_rot, 1);
+                    ESP_LOGI(TAG, "rot button pressed");
+                } else if(strcmp(rx_buffer, "wind") == 0) {
                     gpio_set_level(GPIO_OUTPUT_IO_windMode, 0);
                     vTaskDelay(1000 / portTICK_RATE_MS);
                     gpio_set_level(GPIO_OUTPUT_IO_windMode, 1);
-                    ESP_LOGI(TAG, "wind button pressed")
-                } else if(strcmp(rx_buff, "timer" == 0)) {
+                    ESP_LOGI(TAG, "wind button pressed");
+                } else if(strcmp(rx_buffer, "timer") == 0) {
                     gpio_set_level(GPIO_OUTPUT_IO_timer, 0);
                     vTaskDelay(1000 / portTICK_RATE_MS);
                     gpio_set_level(GPIO_OUTPUT_IO_timer, 1);
-                    ESP_LOGI(TAG, "timer button pressed")
+                    ESP_LOGI(TAG, "timer button pressed");
                 } else {
-                    ESP_LOGI(TAG, "Invalid button entry")
+                    ESP_LOGI(TAG, "Invalid button entry");
                 }
 
                 int err = sendto(sock, rx_buffer, len, 0, (struct sockaddr *)&sourceAddr, sizeof(sourceAddr));
