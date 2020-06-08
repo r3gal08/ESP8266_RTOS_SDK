@@ -26,10 +26,41 @@
 
 #define PORT CONFIG_EXAMPLE_PORT
 
+#define GPIO_OUTPUT_IO_power    16
+#define GPIO_OUTPUT_IO_speed    15
+#define GPIO_OUTPUT_IO_rot      14
+#define GPIO_OUTPUT_IO_windMode 13
+#define GPIO_OUTPUT_IO_timer    12
+
+#define GPIO_OUTPUT_PIN_SEL  ((1ULL<<GPIO_OUTPUT_IO_power) | (1ULL<<GPIO_OUTPUT_IO_speed) | ((1ULL<<GPIO_OUTPUT_IO_rot) | (1ULL<<GPIO_OUTPUT_IO_windMode)) | (1ULL<<GPIO_OUTPUT_IO_timer))
+
+void gpio_Init() {
+    gpio_config_t io_conf;
+    //disable interrupt
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    //set as output mode
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    //bit mask of the pins that you want to set,e.g.GPIO15/16
+    io_conf.pin_bit_mask = GPIO_OUTPUT_PIN_SEL;
+    //disable pull-down mode
+    io_conf.pull_down_en = 0;
+    //disable pull-up mode
+    io_conf.pull_up_en = 0;
+    //configure GPIO with the given settings
+    gpio_config(&io_conf);
+
+    gpio_set_level(GPIO_OUTPUT_IO_power, 1);
+    gpio_set_level(GPIO_OUTPUT_IO_speed, 1);
+    gpio_set_level(GPIO_OUTPUT_IO_rot, 1);
+    gpio_set_level(GPIO_OUTPUT_IO_windMode, 1);
+    gpio_set_level(GPIO_OUTPUT_IO_timer, 1);
+
+    ESP_LOGI(TAG, "GPIO Initilized");
+}
+
 static const char *TAG = "example";
 
-static void udp_server_task(void *pvParameters)
-{
+static void udp_server_task(void *pvParameters){
     char rx_buffer[128];
     char addr_str[128];
     int addr_family;
@@ -78,6 +109,36 @@ static void udp_server_task(void *pvParameters)
                 ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
                 ESP_LOGI(TAG, "%s", rx_buffer);
 
+                // Determine what button was pressed
+                if(strcmp(rx_buff, "power") == 0) {
+                    gpio_set_level(#define GPIO_OUTPUT_IO_power, 0);
+                    vTaskDelay(1000 / portTICK_RATE_MS);
+                    gpio_set_level(GPIO_OUTPUT_IO_power, 1);
+                    ESP_LOGI(TAG, "power button pressed")
+                } else if(strcmp(rx_buff, "speed" == 0)) {
+                    gpio_set_level(GPIO_OUTPUT_IO_speed, 0);
+                    vTaskDelay(1000 / portTICK_RATE_MS);
+                    gpio_set_level(GPIO_OUTPUT_IO_speed, 1);
+                    ESP_LOGI(TAG, "speed button pressed")
+                } else if(strcmp(rx_buff, "rot" == 0)) {
+                    gpio_set_level(#define GPIO_OUTPUT_IO_rot, 0);
+                    vTaskDelay(1000 / portTICK_RATE_MS);
+                    gpio_set_level(#define GPIO_OUTPUT_IO_rot, 1);
+                    ESP_LOGI(TAG, "rot button pressed")
+                } else if(strcmp(rx_buff, "wind" == 0)) {
+                    gpio_set_level(GPIO_OUTPUT_IO_windMode, 0);
+                    vTaskDelay(1000 / portTICK_RATE_MS);
+                    gpio_set_level(GPIO_OUTPUT_IO_windMode, 1);
+                    ESP_LOGI(TAG, "wind button pressed")
+                } else if(strcmp(rx_buff, "timer" == 0)) {
+                    gpio_set_level(GPIO_OUTPUT_IO_timer, 0);
+                    vTaskDelay(1000 / portTICK_RATE_MS);
+                    gpio_set_level(GPIO_OUTPUT_IO_timer, 1);
+                    ESP_LOGI(TAG, "timer button pressed")
+                } else {
+                    ESP_LOGI(TAG, "Invalid button entry")
+                }
+
                 int err = sendto(sock, rx_buffer, len, 0, (struct sockaddr *)&sourceAddr, sizeof(sourceAddr));
                 if (err < 0) {
                     ESP_LOGE(TAG, "Error occured during sending: errno %d", errno);
@@ -96,8 +157,9 @@ static void udp_server_task(void *pvParameters)
     vTaskDelete(NULL);
 }
 
-void app_main()
-{
+void app_main() {
+    gpio_Init();
+
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
